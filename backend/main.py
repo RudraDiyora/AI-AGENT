@@ -12,17 +12,17 @@ class User:
 
     
 class Transaction:
-    def __init__(self, sender: User, reciever: User, transaction_amount: int):
+    def __init__(self, sender: User, receiver: User, transaction_amount: int):
         self.id = str(uuid.uuid4())
         self.sender_id = sender.id
-        self.reciever_id = reciever.id
+        self.receiver_id = receiver.id
         self.transaction_amount = transaction_amount
         self.time_stamp = datetime.now
         
     def __repr__(self):
         return (
-            f"Transaction({self.amount} from {self.sender_id} "
-            f"to {self.receiver_id} at {self.timestamp})"
+            f"Transaction({self.transaction_amount} from {self.sender_id} "
+            f"to {self.receiver_id} at {self.time_stamp()})"
         )
 
     
