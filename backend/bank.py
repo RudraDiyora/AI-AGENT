@@ -1,4 +1,4 @@
-from main import User, Transaction
+from main import User, Transaction, TransactionType
 from validation import validate_user
 import uuid
 
@@ -29,13 +29,25 @@ class Bank:
             return user
         except KeyError:
             return False
+    
+    @validate_user
+    def get_transaction_history(self, user_id: str) -> dict:
+        user = self.search_user(user_id=user_id)
+        transactions = {}
+
+        for transaction_id, transaction in self.transactions.items():
+            if user in transaction.transaction_participants:
+                transactions[transaction_id] = transaction
+
+        return transactions
+
         
     @validate_user
     def deposit(self, user_id: str, amount: int) -> bool:
         user = self.users[user_id]
         user.balance += amount
 
-        deposit_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount)
+        deposit_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.DEPOSIT)
         self.deposits[deposit_transaction.id] = deposit_transaction
 
         return True
@@ -46,7 +58,7 @@ class Bank:
         user = self.users[user_id]
         user.balance -= amount
 
-        withdrawl_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount)
+        withdrawl_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.WITHDRAW)
         self.withdrawls[withdrawl_transaction.id] = withdrawl_transaction
 
         return True
@@ -64,7 +76,7 @@ class Bank:
             sender.balance -= transaction_amount
             receiver.balance += transaction_amount
 
-            new_transaction = Transaction(sender=sender, receiver=receiver, transaction_amount=transaction_amount)
+            new_transaction = Transaction(sender=sender, receiver=receiver, transaction_amount=transaction_amount, transaction_type=TransactionType.TRANSFER)
             self.transactions[new_transaction.id] = new_transaction
 
             return new_transaction

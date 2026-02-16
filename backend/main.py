@@ -1,5 +1,11 @@
 from datetime import datetime
+from enum import Enum
 import uuid
+
+class TransactionType(Enum):
+    TRANSFER = 1,
+    DEPOSIT = 2,
+    WITHDRAW = 3
 
 class User:
     def __init__(self, name: str, email: str):
@@ -12,16 +18,18 @@ class User:
 
     
 class Transaction:
-    def __init__(self, sender: User, receiver: User, transaction_amount: int):
+    def __init__(self, sender: User, receiver: User, transaction_amount: int, transaction_type: TransactionType):
         self.id = str(uuid.uuid4())
+        self.transaction_participants = [sender, receiver]
         self.sender_id = sender.id
         self.receiver_id = receiver.id
         self.transaction_amount = transaction_amount
         self.time_stamp = datetime.now
+        self.transaction_type = transaction_type
         
     def __repr__(self):
         return (
-            f"Transaction({self.transaction_amount} from {self.sender_id} "
+            f"Transaction({self.transaction_amount} ({self.transaction_type}) from {self.sender_id} "
             f"to {self.receiver_id} at {self.time_stamp()})"
         )
 
