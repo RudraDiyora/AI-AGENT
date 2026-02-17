@@ -13,6 +13,7 @@ class User:
         self.email = email
         self.balance = 0
         self.id = str(uuid.uuid4())
+
     def __repr__(self):
         return f"User({self.name}, Balance: {self.balance})"
 
@@ -20,7 +21,7 @@ class User:
 class Transaction:
     def __init__(self, sender: User, receiver: User, transaction_amount: int, transaction_type: TransactionType):
         self.id = str(uuid.uuid4())
-        self.transaction_participants = [sender, receiver]
+        self.transaction_participants = [sender.id, receiver.id]
         self.sender_id = sender.id
         self.receiver_id = receiver.id
         self.transaction_amount = transaction_amount

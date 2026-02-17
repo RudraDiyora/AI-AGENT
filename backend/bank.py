@@ -36,7 +36,7 @@ class Bank:
         transactions = {}
 
         for transaction_id, transaction in self.transactions.items():
-            if user in transaction.transaction_participants:
+            if user.id in transaction.transaction_participants:
                 transactions[transaction_id] = transaction
 
         return transactions
