@@ -1,5 +1,6 @@
 from main import User, Transaction, TransactionType
 from validation import validate_user
+from database import DATABASE, userDB, transactionDB
 import uuid
 
 class Bank:
@@ -19,6 +20,7 @@ class Bank:
             self.users[new_user.id] = new_user
             self.emails[email] = new_user
 
+            userDB.create(new_user)
             return new_user
         
     def search_user(self, user_id: str = 'NULL', email: str = 'NULL') -> User | bool:
@@ -41,7 +43,6 @@ class Bank:
 
         return transactions
 
-        
     @validate_user
     def deposit(self, user_id: str, amount: int) -> bool:
         user = self.users[user_id]
@@ -78,5 +79,7 @@ class Bank:
 
             new_transaction = Transaction(sender=sender, receiver=receiver, transaction_amount=transaction_amount, transaction_type=TransactionType.TRANSFER)
             self.transactions[new_transaction.id] = new_transaction
+
+            transactionDB.create(new_transaction)
 
             return new_transaction

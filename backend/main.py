@@ -25,13 +25,13 @@ class Transaction:
         self.sender_id = sender.id
         self.receiver_id = receiver.id
         self.transaction_amount = transaction_amount
-        self.time_stamp = datetime.now
+        self.time_stamp = str(datetime.now().isoformat())
         self.transaction_type = transaction_type
         
     def __repr__(self):
         return (
             f"Transaction({self.transaction_amount} ({self.transaction_type}) from {self.sender_id} "
-            f"to {self.receiver_id} at {self.time_stamp()})"
+            f"to {self.receiver_id} at {self.time_stamp})"
         )
 
     

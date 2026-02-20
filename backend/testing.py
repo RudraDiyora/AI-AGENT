@@ -10,5 +10,3 @@ testBank.deposit(user_id=secondUser.id,amount=100)
 testBank.request_transfer(sender_id=newUser.id, receiver_id=secondUser.id, transaction_amount=50)
 
 user_transactions = testBank.get_transaction_history(user_id=newUser.id)
-
-print(user_transactions)
