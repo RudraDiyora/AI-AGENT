@@ -5,12 +5,10 @@ import uuid
 
 class Bank:
     def __init__(self):
-        self.id = str(uuid.uuid4)
+        self.id = str(uuid.uuid4())
         self.users = {} # store by {id: UserClass}
         self.emails = {} # store by {email: UserClass}
-        self.transactions = {} # {transaction ID: transaction class}
-        self.deposits = {} # --||--
-        self.withdrawls = {} # {user ID: withdraw amount}
+        self.transactions = {} # {transaction ID: transaction class} (stores transfers,deposites,withdraws)
 
     def create_user(self, name: str, email: str):
         if email in self.emails.keys():
@@ -44,42 +42,53 @@ class Bank:
         return transactions
 
     @validate_user
-    def deposit(self, user_id: str, amount: int) -> bool:
+    def request_deposit(self, user_id: str, amount: float) -> bool:
         user = self.users[user_id]
         user.balance += amount
 
         deposit_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.DEPOSIT)
-        self.deposits[deposit_transaction.id] = deposit_transaction
+        self.transactions[deposit_transaction.id] = deposit_transaction
 
         return True
     
     @validate_user
-    def withdraw(self, user_id: str, amount: int) -> bool:
+    def request_withdraw(self, user_id: str, amount: float) -> bool:
         
         user = self.users[user_id]
-        user.balance -= amount
 
-        withdrawl_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.WITHDRAW)
-        self.withdrawls[withdrawl_transaction.id] = withdrawl_transaction
+        if (user.balance - amount) > 0:
+            user.balance -= amount
 
-        return True
+            withdrawl_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.WITHDRAW)
+            self.transactions[withdrawl_transaction.id] = withdrawl_transaction
+
+            return True
+        else:
+            raise ValueError("WITHDRAW ERROR: Not enough funds")
 
     @validate_user
-    def request_transfer(self, sender_id: str, receiver_id: str, transaction_amount: Transaction) -> Transaction:
+    def request_transfer(self, sender_id: str, receiver_id: str, transaction_amount: float) -> Transaction:
 
         sender = self.users[sender_id]
         receiver = self.users[receiver_id]
 
         if sender == receiver:
-            raise ValueError("the sender and receiver can not be the same")
+            raise ValueError("TRANSFER ERROR: The sender and receiver can not be the same")
+        if sender.balance < transaction_amount:
+            raise ValueError("TRANSFER ERROR: The sender doesn't have enough funds to transfer")
 
-        if sender.balance > transaction_amount:
+        if sender.balance >= transaction_amount:
             sender.balance -= transaction_amount
             receiver.balance += transaction_amount
 
-            new_transaction = Transaction(sender=sender, receiver=receiver, transaction_amount=transaction_amount, transaction_type=TransactionType.TRANSFER)
+            new_transaction = Transaction(
+                sender=sender, 
+                receiver=receiver, 
+                transaction_amount=transaction_amount, 
+                transaction_type=TransactionType.TRANSFER
+            )
+            
             self.transactions[new_transaction.id] = new_transaction
-
             transactionDB.create(new_transaction)
 
             return new_transaction

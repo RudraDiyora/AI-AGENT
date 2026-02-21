@@ -22,7 +22,7 @@ class DATABASE:
     def __init__(self, database_type):
         self.database_type = database_type  
         # create a connection to the database
-        self.database_connection = sqlite3.connect(f'./databases/{database_type.name}.db')
+        self.database_connection = sqlite3.connect(f'./databases/BANK_MAIN.db')
         # create a class to actual conduct operations on the database
         self.database_cursor = self.database_connection.cursor()
 
@@ -36,30 +36,28 @@ class DATABASE:
     def save_database(self, values):
 
         # standardized the case sentititvyt to upper case
-        values = {k.upper(): v for k, v in values.items()}
-
-        for k, v in values.items():
-            if isinstance(v, Enum):
-                values[k] = v.name # only pass the name of the Enum
+        values = {
+            k.upper(): (v.name if isinstance(v, Enum) else v)
+            for k, v in values.items()
+        }
 
         database_type = self.database_type
-        sql_ = f"""INSERT INTO {database_type.name} ("""
 
-        # Generate all the columns
-        for column_name in database_type.value.keys():
-            text = f"{column_name.upper()},"
-            sql_ += text
-        
-        # Prepare to insert values
-        parts_of_sql_ = sql_.rsplit(sep=",", maxsplit=1)
-        sql = "".join(parts_of_sql_) + ") \nVALUES ("
+        # Generate the names of the desired columns
+        colum_names = ", ".join(database_type.value.keys())
+        # Generate the values that will be inserted
+        placeholders = ", ".join(f":{column_name}" for column_name in database_type.value.keys())
 
-        # Generate the values SQL Injection
+        sql = f"""
+            INSERT INTO {database_type.name} 
+            ({colum_names}) 
+            VALUES({placeholders})
+            """
+
+        # Before we exequte and inject the sql, make sure that nothing is missing
         for column_name in database_type.value.keys():
-            text = f":{column_name.upper()},"
-            sql += text
-        # Format the sql
-        sql = "".join(sql.rsplit(sep=",", maxsplit=1)) + ")"
+            if column_name.upper() not in values:
+                raise ValueError(f"Missing field: {column_name}")
 
         self.database_cursor.execute(sql, values) # request an sql query
         self.database_connection.commit() # commit the request
@@ -78,7 +76,7 @@ class DATABASE:
 
         #call CURSOR.execute and pass in our SQL query
         self.database_cursor.execute(sql)
-        #fire off the database request
+        #fire off the database request(only use .commit() when changing the database)
         self.database_connection.commit()
 
 
@@ -90,8 +88,7 @@ transactionDB.create_database()
 # Testing
 
 userDB.database_cursor.execute("SELECT * FROM USERS;")
-userDB.database_connection.commit()
 
 transactionDB.database_cursor.execute("SELECT * FROM TRANSACTIONS;")
-transactionDB.database_connection.commit()
+
 print(transactionDB.database_cursor.fetchall())
