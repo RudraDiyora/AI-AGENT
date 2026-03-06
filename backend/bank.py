@@ -1,6 +1,7 @@
-from main import User, Transaction, TransactionType
-from validation import validate_user
+from main import User, Transaction, NullTransaction, TransactionType
+from bank_validation import validate_user
 from database import DATABASE, userDB, transactionDB
+from engines.transaction_engine import TRANSACTION_ENGINE
 import uuid
 
 class Bank:
@@ -9,6 +10,7 @@ class Bank:
         self.users = {} # store by {id: UserClass}
         self.emails = {} # store by {email: UserClass}
         self.transactions = {} # {transaction ID: transaction class} (stores transfers,deposites,withdraws)
+        self.transaction_engine = TRANSACTION_ENGINE(userDB=userDB, transactionDB=transactionDB)
 
     def create_user(self, name: str, email: str):
         if email in self.emails.keys():
@@ -44,27 +46,36 @@ class Bank:
     @validate_user
     def request_deposit(self, user_id: str, amount: float) -> bool:
         user = self.users[user_id]
-        user.balance += amount
-
         deposit_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.DEPOSIT)
-        self.transactions[deposit_transaction.id] = deposit_transaction
+        if self.transaction_engine.deposit(deposit_record=deposit_transaction):
+            user.balance = self.transaction_engine.get_balance(user_id=user_id)
+            self.transactions[deposit_transaction.id] = deposit_transaction
+            transactionDB.create(deposit_transaction)
 
-        return True
+            return deposit_transaction
+        else:
+            return NullTransaction()
     
     @validate_user
     def request_withdraw(self, user_id: str, amount: float) -> bool:
         
         user = self.users[user_id]
 
-        if (user.balance - amount) > 0:
-            user.balance -= amount
-
+        if (user.balance - amount) >= 0:
             withdrawl_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.WITHDRAW)
-            self.transactions[withdrawl_transaction.id] = withdrawl_transaction
 
-            return True
+            if self.transaction_engine.withdraw(withdrawl_record=withdrawl_transaction):
+
+                user.balance = self.transaction_engine.get_balance(user_id=user_id)
+
+                self.transactions[withdrawl_transaction.id] = withdrawl_transaction
+                transactionDB.create(withdrawl_transaction)
+
+                return withdrawl_transaction
+            else:
+                return NullTransaction()
         else:
-            raise ValueError("WITHDRAW ERROR: Not enough funds")
+            return NullTransaction()
 
     @validate_user
     def request_transfer(self, sender_id: str, receiver_id: str, transaction_amount: float) -> Transaction:
@@ -78,8 +89,6 @@ class Bank:
             raise ValueError("TRANSFER ERROR: The sender doesn't have enough funds to transfer")
 
         if sender.balance >= transaction_amount:
-            sender.balance -= transaction_amount
-            receiver.balance += transaction_amount
 
             new_transaction = Transaction(
                 sender=sender, 
@@ -87,8 +96,16 @@ class Bank:
                 transaction_amount=transaction_amount, 
                 transaction_type=TransactionType.TRANSFER
             )
-            
-            self.transactions[new_transaction.id] = new_transaction
-            transactionDB.create(new_transaction)
 
-            return new_transaction
+            if self.transaction_engine.transfer(new_transaction):
+                sender.balance = self.transaction_engine.get_balance(sender_id)
+                receiver.balance = self.transaction_engine.get_balance(receiver_id)
+                
+                self.transactions[new_transaction.id] = new_transaction
+                transactionDB.create(new_transaction)
+
+                return new_transaction
+            else:
+                return NullTransaction()
+        else:
+            return NullTransaction()

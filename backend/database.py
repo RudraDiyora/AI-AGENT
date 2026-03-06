@@ -28,7 +28,6 @@ class DATABASE:
 
 
     def create(self, instance):
-
         instance_variables = instance.__dict__
         self.save_database(instance_variables)
 
@@ -84,6 +83,8 @@ userDB = DATABASE(database_type=DATABASE.DATABASE_TYPES.USERS)
 userDB.create_database()
 transactionDB = DATABASE(database_type=DATABASE.DATABASE_TYPES.TRANSACTIONS)
 transactionDB.create_database()
+
+mainDb = DATABASE
 
 # Testing
 
