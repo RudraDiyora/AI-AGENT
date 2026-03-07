@@ -1,7 +1,7 @@
-from main import User, Transaction, NullTransaction, TransactionType
-from bank_validation import validate_user
-from database import DATABASE, userDB, transactionDB
-from engines.transaction_engine import TRANSACTION_ENGINE
+from backend.main import User, Transaction, NullTransaction, TransactionType
+from backend.bank_validation import validate_user
+from backend.database import DATABASE, userDB, transactionDB
+from backend.engines.transaction_engine import TRANSACTION_ENGINE
 import uuid
 
 class Bank:
@@ -31,6 +31,15 @@ class Bank:
             return user
         except KeyError:
             return False
+        
+    @validate_user
+    def get_balance(self, user_id: str) -> float:
+        try:
+            user = self.users[user_id]
+            return self.transaction_engine.get_balance(user_id=user_id)
+        except KeyError:
+            print("---ERROR---\n User Not Found")
+            return 0.0
     
     @validate_user
     def get_transaction_history(self, user_id: str) -> dict:
@@ -45,6 +54,9 @@ class Bank:
 
     @validate_user
     def request_deposit(self, user_id: str, amount: float) -> bool:
+        print("____\n")
+        print(self.users)
+        print("____")
         user = self.users[user_id]
         deposit_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.DEPOSIT)
         if self.transaction_engine.deposit(deposit_record=deposit_transaction):

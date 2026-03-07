@@ -22,7 +22,7 @@ class DATABASE:
     def __init__(self, database_type):
         self.database_type = database_type  
         # create a connection to the database
-        self.database_connection = sqlite3.connect(f'./databases/BANK_MAIN.db')
+        self.database_connection = sqlite3.connect('./databases/BANK_MAIN.db', check_same_thread = False)
         # create a class to actual conduct operations on the database
         self.database_cursor = self.database_connection.cursor()
 
@@ -89,7 +89,4 @@ mainDb = DATABASE
 # Testing
 
 userDB.database_cursor.execute("SELECT * FROM USERS;")
-
-transactionDB.database_cursor.execute("SELECT * FROM TRANSACTIONS;")
-
-print(transactionDB.database_cursor.fetchall())
+print(userDB.database_cursor.fetchall())

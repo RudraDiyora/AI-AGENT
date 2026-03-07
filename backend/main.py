@@ -36,6 +36,9 @@ class Transaction:
             f"Transaction({self.transaction_amount} ({self.transaction_type}) from {self.sender_id} "
             f"to {self.receiver_id} at {self.time_stamp})"
         )
+    
+    def __bool__(self):
+        return True
 
 class NullTransaction(Transaction):
     def __init__(self):
@@ -51,3 +54,6 @@ class NullTransaction(Transaction):
 
     def __repr__(self):
         return "<NullTransaction: FAILED>"
+    
+    def __bool__(self):
+        return False

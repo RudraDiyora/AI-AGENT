@@ -1,9 +1,9 @@
 
-from main import NullTransaction
+from backend.main import NullTransaction
 
 def validate_user(func):
     def wrapper(*args, **kwargs):
-        import bank as b
+        import backend.bank as b
 
         # Expecting the first arg to be Bank instance
         bank_instance = args[0] if isinstance(args[0], b.Bank) else None
