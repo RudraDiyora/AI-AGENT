@@ -1,6 +1,6 @@
-from backend.main import User, Transaction, NullTransaction, TransactionType
+from backend.main import User, Transaction, NullTransaction, NullUser, TransactionType
 from backend.bank_validation import validate_user
-from backend.database import DATABASE, userDB, transactionDB
+from backend.database import DATABASE, masterDB
 from backend.engines.transaction_engine import TRANSACTION_ENGINE
 import uuid
 
@@ -10,27 +10,42 @@ class Bank:
         self.users = {} # store by {id: UserClass}
         self.emails = {} # store by {email: UserClass}
         self.transactions = {} # {transaction ID: transaction class} (stores transfers,deposites,withdraws)
-        self.transaction_engine = TRANSACTION_ENGINE(userDB=userDB, transactionDB=transactionDB)
+        self.transaction_engine = TRANSACTION_ENGINE(masterDB=masterDB)
 
     def create_user(self, name: str, email: str):
         if email in self.emails.keys():
             print("ERROR: Email already exists")
         else:
             new_user = User(name, email)
-            self.users[new_user.id] = new_user
-            self.emails[email] = new_user
+            if masterDB.create(database_type=DATABASE.DATABASE_TYPES.USERS, instance=new_user):
+                self.users[new_user.id] = new_user
+                self.emails[email] = new_user
 
-            userDB.create(new_user)
             return new_user
         
     def search_user(self, user_id: str = 'NULL', email: str = 'NULL') -> User | bool:
-        try:
-            user = False
-            if user_id != 'NULL': user = self.users[user_id]
-            elif email != 'NULL': user = self.emails[email]
+        # try:
+        #     user = False
+        #     if user_id != 'NULL': user = self.users[user_id]
+        #     elif email != 'NULL': user = self.emails[email]
+        #     return user
+        # except KeyError:
+        #     return False
+        
+        # if succesful: 0 -> id; 1 -> name; 2 -> email; 3 -> balance
+        user_sql_data = masterDB.search_user(user_id=user_id)
+
+        if user_sql_data:
+            try:
+                user = self.users[user_id]
+            except:
+                user = User(user_sql_data[1], user_sql_data[2])
+                user.balance = user_sql_data[3]
+                self.users[user.id] = user
+                self.emails[user.email] = user
             return user
-        except KeyError:
-            return False
+        else:
+            return NullUser()
         
     @validate_user
     def get_balance(self, user_id: str) -> float:
@@ -42,27 +57,34 @@ class Bank:
             return 0.0
     
     @validate_user
-    def get_transaction_history(self, user_id: str) -> dict:
-        user = self.search_user(user_id=user_id)
-        transactions = {}
+    def get_transaction_history(self, user_id: str) -> list:
+        try:
+            user = self.search_user(user_id=user_id)
+        except:
+            raise ValueError("User not found")
+        raw_transactions = masterDB.get_transaction_history(user_id=user_id)
+        transaction_history = []
 
-        for transaction_id, transaction in self.transactions.items():
-            if user.id in transaction.transaction_participants:
-                transactions[transaction_id] = transaction
+        for transaction in raw_transactions:
+            transaction_history.append({
+                "id": transaction[0],
+                "sender_id": transaction[1],
+                "receiver_id": transaction[2],
+                "amount": transaction[3],
+                "type": transaction[4],
+                "time_stamp": transaction[5]
+            })
 
-        return transactions
+        return transaction_history
 
     @validate_user
     def request_deposit(self, user_id: str, amount: float) -> bool:
-        print("____\n")
-        print(self.users)
-        print("____")
-        user = self.users[user_id]
+        user = self.search_user(user_id=user_id)
         deposit_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.DEPOSIT)
+        
         if self.transaction_engine.deposit(deposit_record=deposit_transaction):
             user.balance = self.transaction_engine.get_balance(user_id=user_id)
             self.transactions[deposit_transaction.id] = deposit_transaction
-            transactionDB.create(deposit_transaction)
 
             return deposit_transaction
         else:
@@ -71,7 +93,7 @@ class Bank:
     @validate_user
     def request_withdraw(self, user_id: str, amount: float) -> bool:
         
-        user = self.users[user_id]
+        user = self.search_user(user_id=user_id)
 
         if (user.balance - amount) >= 0:
             withdrawl_transaction = Transaction(sender=user, receiver=user, transaction_amount=amount, transaction_type=TransactionType.WITHDRAW)
@@ -81,7 +103,6 @@ class Bank:
                 user.balance = self.transaction_engine.get_balance(user_id=user_id)
 
                 self.transactions[withdrawl_transaction.id] = withdrawl_transaction
-                transactionDB.create(withdrawl_transaction)
 
                 return withdrawl_transaction
             else:
@@ -92,8 +113,8 @@ class Bank:
     @validate_user
     def request_transfer(self, sender_id: str, receiver_id: str, transaction_amount: float) -> Transaction:
 
-        sender = self.users[sender_id]
-        receiver = self.users[receiver_id]
+        sender = self.search_user(user_id=sender_id)
+        receiver = self.search_user(user_id=receiver_id)
 
         if sender == receiver:
             raise ValueError("TRANSFER ERROR: The sender and receiver can not be the same")
@@ -114,7 +135,6 @@ class Bank:
                 receiver.balance = self.transaction_engine.get_balance(receiver_id)
                 
                 self.transactions[new_transaction.id] = new_transaction
-                transactionDB.create(new_transaction)
 
                 return new_transaction
             else:

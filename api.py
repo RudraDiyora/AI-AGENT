@@ -25,6 +25,35 @@ class Transfer(BaseModel):
     sender_id: str            # required 
     receiver_id: str
     transaction_amount: float         # required 
+class User(BaseModel):
+    name: str
+    email: str
+
+
+# creating classes
+@app.post("/create-user")
+def create_user(user: User):
+    try:
+        new_user = bank.create_user(user.name, user.email)
+        return {"id": new_user.id, "name": new_user.name, "email": new_user.email}
+    except Exception as e:
+        # backend raised an error(most likely user already exists)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@app.get("/transaction_history/{user_id}")
+def get_transaction_history(user_id: str):
+    try:
+        return bank.get_transaction_history(user_id=user_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    
+
 
 # This is a "route" — a URL path that does something
 @app.get("/balance/{user_id}")
@@ -33,19 +62,31 @@ def balance(user_id: str):
 
 @app.post("/deposit")
 def deposit(deposit: Deposit):
-    bank.request_deposit(deposit.user_id, deposit.amount)
-    return {"status": "success"}
+    try:
+        deposit_request = bank.request_deposit(deposit.user_id, deposit.amount)
+        if not bool(deposit_request):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Deposit Failed: NullTransaction"
+            )
 
+        return {"status": "success"}
+    except Exception as e:
+        # backend raised a ValueError (e.g., negative funds)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 @app.post("/withdraw")
 def withdraw(withdraw: Withdraw):
     try:
         withdraw_request = bank.request_withdraw(withdraw.user_id, withdraw.amount)
-        print(withdraw_request)
+
         if not bool(withdraw_request):
             # backend returned False
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Withdrawal failed: NullTransaction"
+                detail="Withdrawal Failed: NullTransaction"
             )
         return {"status": "success"}
     except Exception as e:
@@ -56,19 +97,19 @@ def withdraw(withdraw: Withdraw):
         )
 
 @app.post("/transfer")
-def deposit(transfer: Transfer):
+def transfer(transfer: Transfer):
     try:
         # success = true fail = false
-        deposit_request = bank.request_transfer(
+        transfer_request = bank.request_transfer(
                             transfer.sender_id, 
                             transfer.receiver_id, 
                             transfer.transaction_amount
                           )
-        if not bool(deposit_request):
+        if not bool(transfer_request):
             # backend returned False
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Deposit failed: NullTransaction"
+                detail="Transfer Failed: NullTransaction"
             )
         return {"status": "success"}
 

@@ -57,3 +57,18 @@ class NullTransaction(Transaction):
     
     def __bool__(self):
         return False
+    
+class NullUser(User):
+    def __init__(self):
+        # Call the parent constructor with dummy/fake values
+        # Or just set the properties manually
+        self.id = "NULL"
+        self.name = None
+        self.email = None
+        self.balance = None
+
+    def __repr__(self):
+        return "<NullUser: FAILED>"
+    
+    def __bool__(self):
+        return False
