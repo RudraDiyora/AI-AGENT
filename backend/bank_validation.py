@@ -13,7 +13,7 @@ def validate_user(func):
         # Validate user IDs
         for param in ['user_id', 'sender_id', 'receiver_id']:
             if param in kwargs:
-                if kwargs[param] not in bank_instance.users:
+                if not(bank_instance.search_user(kwargs[param])):
                     print(f"Validation failed: Invalid user ID '{kwargs[param]}'")
                     return NullTransaction()  # consistent with failed transactions
 
@@ -21,7 +21,7 @@ def validate_user(func):
         for param in ['amount', 'transaction_amount']:
             if param in kwargs:
                 if kwargs[param] < 0:
-                    print(f"Validation failed: Invalid amount '{kwargs[param]}'")
+                    print(f"Validation failed: Invalid amount '{kwçargs[param]}'")
                     return NullTransaction()
 
         # Passed validation

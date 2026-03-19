@@ -22,9 +22,12 @@ class TRANSACTION_ENGINE:
                 # Confirm the sender
                 self.masterDB.database_cursor.execute("""
                     SELECT BALANCE FROM USERS WHERE ID = ?""", 
-                    (deposit_record.sender.id,)
+                    (deposit_record.sender_id,)
                 )
                 user_balance = self.masterDB.database_cursor.fetchone()    
+                self.masterDB.database_cursor.execute("SELECT * FROM USERS;")
+                print(f"TESTING: {self.masterDB.database_cursor.fetchall()}")  
+                print(f"USER: {user_balance} \n")
                 if not user_balance:
                     raise ValueError("User Not Found")
                 user_balance = user_balance[0]
@@ -43,13 +46,20 @@ class TRANSACTION_ENGINE:
                         (ID, SENDER_ID, RECEIVER_ID, TRANSACTION_AMOUNT, TRANSACTION_TYPE, TIME_STAMP)
                         VALUES (?, ?, ?, ?, ?, ?)""",
                     (deposit_record.id, deposit_record.sender_id, deposit_record.receiver_id, deposit_record.transaction_amount, 
-                     deposit_record.transaction_type.name, deposit_record.timestamp)
+                     deposit_record.transaction_type.name, deposit_record.time_stamp)
                 )
             deposit_record.sender.balance = self.get_balance(deposit_record.sender.id)
 
             return True
         except Exception as e:
-            print(deposit_record.__dict__)
+            with self.masterDB.database_connection:
+                self.masterDB.database_cursor.execute("""
+                    INSERT INTO TRANSACTIONS 
+                        (ID, SENDER_ID, RECEIVER_ID, TRANSACTION_AMOUNT, TRANSACTION_TYPE, TIME_STAMP)
+                        VALUES (?, ?, ?, ?, ?, ?)""",
+                    (deposit_record.id, deposit_record.sender_id, deposit_record.receiver_id, deposit_record.transaction_amount, 
+                     "DEPOSIT_FAIL", deposit_record.time_stamp)
+                )
             print(f"Deposit failed: {e}")
             return False
 
@@ -61,7 +71,7 @@ class TRANSACTION_ENGINE:
                 # Confirm the sender
                 self.masterDB.database_cursor.execute("""
                     SELECT BALANCE FROM USERS WHERE ID = ?""", 
-                    (withdrawl_record.sender.id,)
+                    (withdrawl_record.sender_id,)
                 )
                 user_balance = self.masterDB.database_cursor.fetchone()    
                 if not user_balance:
@@ -85,13 +95,22 @@ class TRANSACTION_ENGINE:
                         (ID, SENDER_ID, RECEIVER_ID, TRANSACTION_AMOUNT, TRANSACTION_TYPE, TIME_STAMP)
                         VALUES (?, ?, ?, ?, ?, ?)""",
                     (withdrawl_record.id, withdrawl_record.sender_id, withdrawl_record.receiver_id, withdrawl_record.transaction_amount, 
-                     withdrawl_record.transaction_type.name, withdrawl_record.timestamp)
+                     withdrawl_record.transaction_type.name, withdrawl_record.time_stamp)
                 )
             withdrawl_record.sender.balance = self.get_balance(withdrawl_record.sender.id)
 
             return True
 
         except Exception as e:
+            # insert a failed transaction
+            with self.masterDB.database_connection:
+                self.masterDB.database_cursor.execute("""
+                    INSERT INTO TRANSACTIONS 
+                        (ID, SENDER_ID, RECEIVER_ID, TRANSACTION_AMOUNT, TRANSACTION_TYPE, TIME_STAMP)
+                        VALUES (?, ?, ?, ?, ?, ?)""",
+                    (withdrawl_record.id, withdrawl_record.sender_id, withdrawl_record.receiver_id, withdrawl_record.transaction_amount, 
+                     "WITHDRAW_FAIL", withdrawl_record.time_stamp)
+                )
             print(f"Withdrawal failed: {e}")
             return False
 
@@ -101,7 +120,7 @@ class TRANSACTION_ENGINE:
                 # Confirm the sender
                 self.masterDB.database_cursor.execute("""
                     SELECT BALANCE FROM USERS WHERE ID = ?""", 
-                    (transaction_record.sender.id,)
+                    (transaction_record.sender_id,)
                 )
                 sender_balance = self.masterDB.database_cursor.fetchone()    
                 if not sender_balance:
@@ -115,7 +134,7 @@ class TRANSACTION_ENGINE:
                 # Confirm the receiver
                 self.masterDB.database_cursor.execute("""
                     SELECT BALANCE FROM USERS WHERE ID = ?""", 
-                    (transaction_record.receiver.id,)
+                    (transaction_record.receiver_id,)
                 )
                 receiver_balance = self.masterDB.database_cursor.fetchone()    
                 if not receiver_balance:
@@ -141,7 +160,7 @@ class TRANSACTION_ENGINE:
                         (ID, SENDER_ID, RECEIVER_ID, TRANSACTION_AMOUNT, TRANSACTION_TYPE, TIME_STAMP)
                         VALUES (?, ?, ?, ?, ?, ?)""",
                     (transaction_record.id, transaction_record.sender_id, transaction_record.receiver_id, transaction_record.transaction_amount, 
-                     transaction_record.transaction_type.name, transaction_record.timestamp)
+                     transaction_record.transaction_type.name, transaction_record.time_stamp)
                 )
 
             transaction_record.sender.balance = self.get_balance(transaction_record.sender.id)
@@ -149,5 +168,13 @@ class TRANSACTION_ENGINE:
             return True
 
         except Exception as e:
+            with self.masterDB.database_connection:
+                self.masterDB.database_cursor.execute("""
+                    INSERT INTO TRANSACTIONS 
+                        (ID, SENDER_ID, RECEIVER_ID, TRANSACTION_AMOUNT, TRANSACTION_TYPE, TIME_STAMP)
+                        VALUES (?, ?, ?, ?, ?, ?)""",
+                    (transaction_record.id, transaction_record.sender_id, transaction_record.receiver_id, transaction_record.transaction_amount, 
+                     "TRANSFER_FAIL", transaction_record.time_stamp)
+                )
             print(f"Transfer failed: {e}")
             return False

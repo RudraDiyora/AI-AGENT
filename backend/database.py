@@ -1,17 +1,18 @@
-import sqlite3
 from enum import Enum
+import sqlite3
+import os
 
 class DATABASE:
 
     class DATABASE_TYPES(Enum):
         USERS = {
-            "ID": "TEXT", # Integer Primary Key = Original SQL Native
+            "ID": "TEXT UNIQUE", # Integer Primary Key = Original SQL Native
             "NAME": "TEXT",
-            "EMAIL": "TEXT",
+            "EMAIL": "TEXT UNIQUE",
             "BALANCE": "REAL"
         }
         TRANSACTIONS = {
-            "ID": "TEXT",
+            "ID": "TEXT UNIQUE",
             "SENDER_ID": "TEXT",
             "RECEIVER_ID": "TEXT",
             "TRANSACTION_AMOUNT": "REAL",
@@ -21,6 +22,8 @@ class DATABASE:
     
     def __init__(self): 
         # create a connection to the database
+        if os.path.isfile('./databases/BANK_MAIN.db'):
+            os.remove('./databases/BANK_MAIN.db')  # wipe on restart during development
         self.database_connection = sqlite3.connect('./databases/BANK_MAIN.db', check_same_thread = False)
         # create a class to actual conduct operations on the database
         self.database_cursor = self.database_connection.cursor()
@@ -56,7 +59,6 @@ class DATABASE:
                     raise ValueError(f"Missing field: {column_name}")
 
             self.database_cursor.execute(sql, values) # request an sql query
-            self.database_connection.commit() # commit the request
 
 
     def create_table(self, database_type):
@@ -86,11 +88,25 @@ class DATABASE:
                         BALANCE
                     FROM USERS
                     WHERE ID = ?
-                    """, (user_id, ))
+                    ;""", (user_id, ))
                 user = self.database_cursor.fetchone()
                 return user
         except:
             raise ValueError("User Not Found")
+        
+    def get_emails(self):
+        with self.database_connection:
+            self.database_cursor.execute("""
+                SELECT EMAIL FROM USERS;
+            
+            """)
+
+            # raw_emails = list of tuples
+            raw_emails = self.database_cursor.fetchall()
+            # individual email = ('email',) --> email[0] = 'email'
+            emails = [email[0] for email in raw_emails]
+
+            return emails
         
     def get_transaction_history(self, user_id):
         with self.database_connection:

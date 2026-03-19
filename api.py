@@ -1,18 +1,19 @@
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from backend.bank import Bank
+from backend.database import masterDB
 
 
 # create the app instance
 app = FastAPI()
 # create a testing bank
-bank = Bank()
+bank = Bank(masterDB=masterDB)
 
 newUser = bank.create_user("Rudra","rudra@gmail.com")
-secondUser = bank.create_user("Bob","Bob@gmail.com")
+# secondUser = bank.create_user("Bob","Bob@gmail.com")
 
-bank.request_deposit(user_id=newUser.id,amount=100)
-bank.request_deposit(user_id=secondUser.id,amount=100)
+# bank.request_deposit(user_id=newUser.id,amount=100)
+# bank.request_deposit(user_id=secondUser.id,amount=100)
 
 # Define the shape of your data
 class Deposit(BaseModel):
@@ -30,6 +31,28 @@ class User(BaseModel):
     email: str
 
 
+# debugging
+@app.get("/db_users")
+def get_transaction_history():
+    try:
+        masterDB.database_cursor.execute("SELECT * FROM USERS;")
+        return masterDB.database_cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+@app.get("/db_transactions")
+def get_transaction_history():
+    try:
+        masterDB.database_cursor.execute("SELECT * FROM TRANSACTIONS;")
+        return masterDB.database_cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
 # creating classes
 @app.post("/create-user")
 def create_user(user: User):
@@ -43,7 +66,7 @@ def create_user(user: User):
             detail=str(e)
         )
 
-@app.get("/transaction_history/{user_id}")
+@app.get("/transaction-history/{user_id}")
 def get_transaction_history(user_id: str):
     try:
         return bank.get_transaction_history(user_id=user_id)
@@ -53,8 +76,6 @@ def get_transaction_history(user_id: str):
             detail=str(e)
         )
     
-
-
 # This is a "route" — a URL path that does something
 @app.get("/balance/{user_id}")
 def balance(user_id: str):
@@ -64,6 +85,7 @@ def balance(user_id: str):
 def deposit(deposit: Deposit):
     try:
         deposit_request = bank.request_deposit(deposit.user_id, deposit.amount)
+        print(f"api.py: {deposit_request}")
         if not bool(deposit_request):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
