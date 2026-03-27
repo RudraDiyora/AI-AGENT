@@ -1,7 +1,8 @@
-
+import functools
 from backend.main import NullTransaction
 
 def validate_user(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         import backend.bank as b
 
@@ -13,15 +14,15 @@ def validate_user(func):
         # Validate user IDs
         for param in ['user_id', 'sender_id', 'receiver_id']:
             if param in kwargs:
-                if not(bank_instance.search_user(kwargs[param])):
+                if not bank_instance.search_user(user_id=kwargs[param]):
                     print(f"Validation failed: Invalid user ID '{kwargs[param]}'")
-                    return NullTransaction()  # consistent with failed transactions
+                    return NullTransaction()
 
         # Validate amounts
         for param in ['amount', 'transaction_amount']:
             if param in kwargs:
-                if kwargs[param] < 0:
-                    print(f"Validation failed: Invalid amount '{kwçargs[param]}'")
+                if kwargs[param] <= 0:
+                    print(f"Validation failed: Invalid amount '{kwargs[param]}'")
                     return NullTransaction()
 
         # Passed validation

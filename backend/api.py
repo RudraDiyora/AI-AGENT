@@ -1,7 +1,10 @@
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
-from backend.bank import Bank
-from backend.database import masterDB
+from .bank import Bank
+from .database import masterDB
+
 
 
 # create the app instance
@@ -12,8 +15,14 @@ bank = Bank(masterDB=masterDB)
 newUser = bank.create_user("Rudra","rudra@gmail.com")
 # secondUser = bank.create_user("Bob","Bob@gmail.com")
 
-# bank.request_deposit(user_id=newUser.id,amount=100)
-# bank.request_deposit(user_id=secondUser.id,amount=100)
+# make sure the frontend reads the same server as the backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Define the shape of your data
 class Deposit(BaseModel):
