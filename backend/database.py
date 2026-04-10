@@ -22,8 +22,11 @@ class DATABASE:
     
     def __init__(self): 
         # create a connection to the database
-        if os.path.isfile('./databases/BANK_MAIN.db'):
-            os.remove('./databases/BANK_MAIN.db')  # wipe on restart during development
+
+        # uncommenting the bellow code creates a DB that is wiped on every restart
+        # if os.path.isfile('./databases/BANK_MAIN.db'):
+        #     os.remove('./databases/BANK_MAIN.db')  # wipe on restart during development
+        
         self.database_connection = sqlite3.connect('./databases/BANK_MAIN.db', check_same_thread = False)
         # create a class to actual conduct operations on the database
         self.database_cursor = self.database_connection.cursor()

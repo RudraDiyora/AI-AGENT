@@ -12,7 +12,7 @@ app = FastAPI()
 # create a testing bank
 bank = Bank(masterDB=masterDB)
 
-newUser = bank.create_user("Rudra","rudra@gmail.com")
+#newUser = bank.create_user("Rudra","rudra@gmail.com")
 # secondUser = bank.create_user("Bob","Bob@gmail.com")
 
 # make sure the frontend reads the same server as the backend
