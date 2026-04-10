@@ -1,18 +1,26 @@
 import { useState } from "react";
-import { deposit } from "../api/api";
+import { transfer } from "../api/api";
 
-export default function DepositForm({ userID }) {
+export default function TransferForm({ userID }) {
   const [amount, setAmount] = useState("");
+  const [receiverID, setReceiverID] = useState("")
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isError, setIsError] = useState(false);
 
-  const handleDeposit = async () => {
+
+  const handleTransfer = async () => {
     const numericAmount = parseFloat(amount);
+
+    if (!receiverID) {
+        setStatus("Receiver ID is required");
+        setIsError(true);
+        return;
+    }
 
     if (isNaN(numericAmount) || numericAmount <= 0) {
         setStatus("Invalid amount");
-        setIsError(true)
+        setIsError(true);
         return;
     }
 
@@ -20,25 +28,33 @@ export default function DepositForm({ userID }) {
         setLoading(true);
         setStatus("Processing...");
 
-        await deposit(userID, numericAmount);
+        await transfer(userID, receiverID, numericAmount);
 
-        setStatus("Deposit successful");
+        // Reset all the fields
+        setStatus("Transfer successful");
         setAmount("");
+        setReceiverID("");
         setIsError(false);
     } 
     catch (err) {
         alert(err);
-        setStatus("Deposit failed");
+        setStatus("Transfer failed");
         setIsError(true);
     } 
     finally {
         setLoading(false);
     }
-
   };
 
   return (
     <div>
+      <input
+            type="text"
+            value={receiverID}
+            onChange={(e) => setReceiverID(e.target.value)}
+            placeholder="Receiver ID"
+      />
+
       <input
             type="number"
             step="0.01"
@@ -48,10 +64,9 @@ export default function DepositForm({ userID }) {
             placeholder="Amount"
       />
 
-      <button onClick={handleDeposit} disabled={loading}>
-            {loading ? "Processing..." : "Deposit"}
+      <button onClick={handleTransfer} disabled={loading}>
+            {loading ? "Processing..." : "Transfer"}
       </button>
-
 
       {status && (
         <p style={{ color: isError ? "red" : "green" }}>

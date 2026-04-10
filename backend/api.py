@@ -108,6 +108,7 @@ def deposit(deposit: Deposit):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
 @app.post("/withdraw")
 def withdraw(withdraw: Withdraw):
     try:

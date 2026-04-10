@@ -10,15 +10,34 @@ import './App.css'
 // manual imports
 import DepositForm from './components/depositForm'
 import WithdrawForm from './components/withdrawForm'
+import TransferFrom from './components/transferForm'
+import CreateUserForm from './components/createUserForm'
+
 
 
 function App() {
   return (
     <div>
-      <h1>Bank App</h1>
-      <DepositForm userID={"57c4ec95-cd10-4060-af44-dd853c18df2e"}/>
-      <h1>Bank App</h1>
-      <WithdrawForm userID={"57c4ec95-cd10-4060-af44-dd853c18df2e"}/>
+
+      <div>
+        <h1>Create User Form</h1>
+        <CreateUserForm/>
+      </div>
+
+      <div>
+        <h1>Deposit From</h1>
+        <DepositForm userID={"18a27054-d535-43bd-8f96-b525b8ed9810"}/>
+      </div>
+
+      <div>
+        <h1>Withdraw Form</h1>
+        <WithdrawForm userID={"18a27054-d535-43bd-8f96-b525b8ed9810"}/>
+      </div>
+
+      <div>
+        <h1>Transfer Form</h1>
+        <TransferFrom userID={"18a27054-d535-43bd-8f96-b525b8ed9810"}/>
+      </div>
     </div>
   );
 }
