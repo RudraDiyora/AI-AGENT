@@ -80,18 +80,31 @@ class DATABASE:
             #fire off the database request(only use .commit() when changing the database)
             self.database_connection.commit()
 
-    def search_user(self, user_id):
+    def search_user(self, **kwargs):
         try:
+            searchingParamter = ""
+            searchingValue = None
+            for key, value in kwargs.items():
+                if value != "NULL":
+                    searchingParamter = str(key)
+                    searchingValue = value
+            
+            match(searchingParamter):
+                case "user_id":
+                    searchingParamter = "ID"
+                case "email":
+                    searchingParamter = "EMAIL"
+
             with self.database_connection:
-                self.database_cursor.execute("""
+                self.database_cursor.execute(f"""
                     SELECT 
                         ID,
                         NAME,
                         EMAIL,
                         BALANCE
                     FROM USERS
-                    WHERE ID = ?
-                    ;""", (user_id, ))
+                    WHERE {searchingParamter} = ?
+                    ;""", (searchingValue, ))
                 user = self.database_cursor.fetchone()
                 return user
         except:

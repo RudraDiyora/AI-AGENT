@@ -25,23 +25,16 @@ class Bank:
             raise ValueError(f"Could not create user: {e}")
         
     def search_user(self, user_id: str = 'NULL', email: str = 'NULL') -> User | bool:
-        # try:
-        #     user = False
-        #     if user_id != 'NULL': user = self.users[user_id]
-        #     elif email != 'NULL': user = self.emails[email]
-        #     return user
-        # except KeyError:
-        #     return False
-        
+
         # if succesful: 0 -> id; 1 -> name; 2 -> email; 3 -> balance
-        user_sql_data = self.masterDB.search_user(user_id=user_id)
+        user_sql_data = self.masterDB.search_user(user_id=user_id, email=email)
 
         if user_sql_data:
             try:
                 user = self.users[user_id]
             except:
                 user = User(user_sql_data[1], user_sql_data[2])
-                user.id = user_id
+                user.id = user_sql_data[0]
                 user.balance = user_sql_data[3]
                 self.users[user.id] = user
                 self.emails[user.email] = user

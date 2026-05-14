@@ -38,6 +38,8 @@ class Transfer(BaseModel):
 class User(BaseModel):
     name: str
     email: str
+class LoginRequest(BaseModel):
+    email: str
 
 
 # debugging
@@ -61,6 +63,25 @@ def get_transaction_history():
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+    
+#session handling
+@app.post("/login")
+def login(request: LoginRequest):
+    user = bank.search_user(email=request.email)
+    print(f"\n\n\n\nheres user: {user}~~~~~~~~~~~~~~~~~~~~~~~\n\n\n\n")
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    
+    return {
+        "success": True,
+        "user_id": user.id,
+        "name": user.name,
+        "email": user.email
+    }
 
 # creating classes
 @app.post("/create-user")

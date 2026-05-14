@@ -28,8 +28,25 @@ async function validateResponse(response, message) {
 // res = the HTTP response(the value of fetch/the promise).
 // by arrow function logic: res => res.json = function ___() {return res.json()}
 //      res.json() converts the HTTP response into a JavaScript object
-export const getBalance = (userId) => {
-  fetch(`${API}/balance/${userId}`).then(res => res.json());
+
+//login
+export const login = async(email) => {
+  const res = await fetch(`${API}/login`,
+  {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        {
+          "email": email
+        }
+      )
+  });
+
+  return validateResponse(res, "login failed")
+}
+
+export const getBalance = (userID) => {
+  fetch(`${API}/balance/${userID}`).then(res => res.json());
   return validateResponse(res, "Balance retrieval failed");
 }
 
@@ -61,7 +78,6 @@ export const deposit = async (userID, amount) => {
           }
         ) // converst JS object to JSON string(opposite of res.json())
     });
-
   return validateResponse(res, "Deposit failed");
 }
 

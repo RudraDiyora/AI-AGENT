@@ -26,8 +26,8 @@ class TRANSACTION_ENGINE:
                 )
                 user_balance = self.masterDB.database_cursor.fetchone()    
                 self.masterDB.database_cursor.execute("SELECT * FROM USERS;")
-                print(f"TESTING: {self.masterDB.database_cursor.fetchall()}")  
-                print(f"USER: {user_balance} \n")
+                print(f"te.py: TESTING: {self.masterDB.database_cursor.fetchall()}")  
+                print(f"te.py: USER: {user_balance} \n")
                 if not user_balance:
                     raise ValueError("User Not Found")
                 user_balance = user_balance[0]

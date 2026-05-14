@@ -1,46 +1,44 @@
 import { useState } from "react";
-import { createUser } from "../api/api";
+import { login } from "../api/api";
 
-export default function CreateUserForm() {
-  const [userName, setUserName] = useState("");
+export default function LoginForm({ setUser }) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isError, setIsError] = useState(false);
 
-  const handleUserCreate = async () => {
+  const handleLogin = async () => {
+
+    if (!email.includes('@')) {
+        setStatus("Invalid email");
+        setIsError(true)
+        return;
+    }
+
     try {
         setLoading(true);
         setStatus("Processing...");
 
-        alert(await createUser(userName, email));
+        const data = await login(email);
+        console.log(data);
+        localStorage.setItem("user", JSON.stringify(data));
+        setUser(data);
 
-        setStatus("User successfully created");
-
-        // Reset all the input fields
-        setUserName("");
-        setEmail("");
+        setStatus("Login successful");
         setIsError(false);
     } 
     catch (err) {
         alert(err);
-        setStatus("User creation failed");
+        setStatus("Login failed");
         setIsError(true);
     } 
     finally {
         setLoading(false);
     }
-
   };
 
   return (
     <div>
-      <input
-            type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Name"
-      />
       <input
             type="email"
             value={email}
@@ -48,8 +46,8 @@ export default function CreateUserForm() {
             placeholder="Email"
       />
 
-      <button onClick={handleUserCreate} disabled={loading}>
-            {loading ? "Processing..." : "Create"}
+      <button onClick={handleLogin} disabled={loading}>
+            {loading ? "Processing..." : "Login"}
       </button>
 
 
