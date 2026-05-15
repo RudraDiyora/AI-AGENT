@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { getTransactionHistory } from "../api/api";
 
-export default function TransactionHistoryView ({userID}) {
+export default function TransactionHistoryView ({}) {
     const [transactionHistory, setTransactionHistory] = useState([]);
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -13,7 +13,7 @@ export default function TransactionHistoryView ({userID}) {
             setStatus("Processing...");
 
             // attempt a retrieval and update the state-value
-            const transactionHistory_ = await getTransactionHistory(userID);
+            const transactionHistory_ = await getTransactionHistory();
             setTransactionHistory(transactionHistory_);
             
             setStatus("Transaction History retrieval successful");

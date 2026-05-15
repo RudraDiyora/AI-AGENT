@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
@@ -18,7 +18,7 @@ bank = Bank(masterDB=masterDB)
 # make sure the frontend reads the same server as the backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -26,20 +26,19 @@ app.add_middleware(
 
 # Define the shape of your data
 class Deposit(BaseModel):
-    user_id: str            # required 
     amount: float         # required 
 class Withdraw(BaseModel):
-    user_id: str            # required 
     amount: float         # required 
 class Transfer(BaseModel):
-    sender_id: str            # required 
     receiver_id: str
     transaction_amount: float         # required 
 class User(BaseModel):
     name: str
     email: str
+    password: str
 class LoginRequest(BaseModel):
     email: str
+    password: str
 
 
 # debugging
@@ -65,10 +64,15 @@ def get_transaction_history_all():
         )
     
 #session handling
+@app.get("/me")
+def get_me(user = Depends(bank.authentication_engine.get_current_user)):
+    return user
+
+#login handling
 @app.post("/login")
 def login(request: LoginRequest):
+
     user = bank.search_user(email=request.email)
-    print(f"\n\n\n\nheres user: {user}~~~~~~~~~~~~~~~~~~~~~~~\n\n\n\n")
 
     if not user:
         raise HTTPException(
@@ -76,19 +80,36 @@ def login(request: LoginRequest):
             detail="User not found"
         )
     
+    if not bank.security_engine.verifyPassword(
+        raw_password=request.password,
+        hashed_password=user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect credentials"
+        )
+    
+    access_token = bank.authentication_engine.create_access_token(
+        {
+            "user_id": user.id,
+            "name": user.name,
+            "email": user.email
+        }
+    )
+    
     return {
         "success": True,
-        "user_id": user.id,
-        "name": user.name,
-        "email": user.email
+        "access_token": access_token,
+        "token_type": "bearer"
     }
 
 # creating classes
 @app.post("/create-user")
 def create_user(user: User):
     try:
-        new_user = bank.create_user(user.name, user.email)
-        return {"id": new_user.id, "name": new_user.name, "email": new_user.email}
+        hashed_password = bank.security_engine.hashPassword(user.password)
+        new_user = bank.create_user(user.name, user.email, hashed_password)
+        return {"id": new_user.id, "name": new_user.name, "email": new_user.email, "password": "***"}
     except Exception as e:
         # backend raised an error(most likely user already exists)
         raise HTTPException(
@@ -96,9 +117,10 @@ def create_user(user: User):
             detail=str(e)
         )
 
-@app.get("/transaction-history/{user_id}")
-def get_transaction_history(user_id: str):
+@app.get("/transaction-history")
+def get_transaction_history(user = Depends(bank.authentication_engine.get_current_user)):
     try:
+        user_id = user["user_id"]
         return bank.get_transaction_history(user_id=user_id)
     except Exception as e:
         raise HTTPException(
@@ -107,14 +129,16 @@ def get_transaction_history(user_id: str):
         )
     
 # This is a "route" — a URL path that does something
-@app.get("/balance/{user_id}")
-def balance(user_id: str):
+@app.get("/balance")
+def balance(user = Depends(bank.authentication_engine.get_current_user)):
+    user_id = user["user_id"]
     return {"balance": bank.get_balance(user_id)}
 
 @app.post("/deposit")
-def deposit(deposit: Deposit):
+def deposit(deposit: Deposit, user = Depends(bank.authentication_engine.get_current_user)):
     try:
-        deposit_request = bank.request_deposit(deposit.user_id, deposit.amount)
+        user_id = user["user_id"]
+        deposit_request = bank.request_deposit(user_id, deposit.amount)
         print(f"api.py: {deposit_request}")
         if not bool(deposit_request):
             raise HTTPException(
@@ -131,9 +155,10 @@ def deposit(deposit: Deposit):
         )
 
 @app.post("/withdraw")
-def withdraw(withdraw: Withdraw):
+def withdraw(withdraw: Withdraw, user = Depends(bank.authentication_engine.get_current_user)):
     try:
-        withdraw_request = bank.request_withdraw(withdraw.user_id, withdraw.amount)
+        user_id = user["user_id"]
+        withdraw_request = bank.request_withdraw(user_id, withdraw.amount)
 
         if not bool(withdraw_request):
             # backend returned False
@@ -150,11 +175,12 @@ def withdraw(withdraw: Withdraw):
         )
 
 @app.post("/transfer")
-def transfer(transfer: Transfer):
+def transfer(transfer: Transfer, user = Depends(bank.authentication_engine.get_current_user)):
+    sender_id = user["user_id"]
     try:
         # success = true fail = false
         transfer_request = bank.request_transfer(
-                            transfer.sender_id, 
+                            sender_id, 
                             transfer.receiver_id, 
                             transfer.transaction_amount
                           )

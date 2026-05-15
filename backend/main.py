@@ -9,10 +9,11 @@ class TransactionType(Enum):
     NULL = 4
 
 class User:
-    def __init__(self, name: str, email: str):
+    def __init__(self, name: str, email: str, hashed_password: str):
         self.name = name
         self.email = email
         self.balance = 0
+        self.hashed_password = hashed_password
         self.id = str(uuid.uuid4())
 
     def __repr__(self):
@@ -65,6 +66,7 @@ class NullUser(User):
         self.id = "NULL"
         self.name = None
         self.email = None
+        self.hashed_password = None
         self.balance = None
 
     def __repr__(self):

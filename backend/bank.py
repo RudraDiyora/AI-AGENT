@@ -2,7 +2,10 @@ from backend.main import User, Transaction, NullTransaction, NullUser, Transacti
 from backend.bank_validation import validate_user
 from backend.database import DATABASE
 from backend.engines.transaction_engine import TRANSACTION_ENGINE
+from backend.engines.security_engine import SECURITY_ENGINE
+from backend.engines.authentication_engine import AUTHENTICATION_ENGINE
 import uuid
+
 
 class Bank:
     def __init__(self, masterDB):
@@ -11,11 +14,14 @@ class Bank:
         self.emails = {} # store by {email: UserClass}
         self.transactions = {} # {transaction ID: transaction class} (stores transfers,deposites,withdraws)
         self.transaction_engine = TRANSACTION_ENGINE(masterDB=masterDB)
+        self.security_engine = SECURITY_ENGINE() # password handling
+        self.authentication_engine = AUTHENTICATION_ENGINE() # JWT session token handling
         self.masterDB = masterDB
 
-    def create_user(self, name: str, email: str):
+    def create_user(self, name: str, email: str, hashed_password: str):
         try:
-            new_user = User(name, email)
+            new_user = User(name, email, hashed_password)
+            print(f"\nbank.py: {new_user}\n")
             self.masterDB.create(database_type=DATABASE.DATABASE_TYPES.USERS, instance=new_user)
             self.users[new_user.id] = new_user
             self.emails[email] = new_user
@@ -26,14 +32,15 @@ class Bank:
         
     def search_user(self, user_id: str = 'NULL', email: str = 'NULL') -> User | bool:
 
-        # if succesful: 0 -> id; 1 -> name; 2 -> email; 3 -> balance
+        # if succesful: 0 -> id; 1 -> name; 2 -> email; 3 -> balance; 4 -> hashed_password
         user_sql_data = self.masterDB.search_user(user_id=user_id, email=email)
+        print(f"bank.py: {user_sql_data}")
 
         if user_sql_data:
             try:
                 user = self.users[user_id]
             except:
-                user = User(user_sql_data[1], user_sql_data[2])
+                user = User(user_sql_data[1], user_sql_data[2], user_sql_data[4])
                 user.id = user_sql_data[0]
                 user.balance = user_sql_data[3]
                 self.users[user.id] = user

@@ -9,7 +9,8 @@ class DATABASE:
             "ID": "TEXT UNIQUE", # Integer Primary Key = Original SQL Native
             "NAME": "TEXT",
             "EMAIL": "TEXT UNIQUE",
-            "BALANCE": "REAL"
+            "BALANCE": "REAL",
+            "HASHED_PASSWORD":"TEXT"
         }
         TRANSACTIONS = {
             "ID": "TEXT UNIQUE",
@@ -34,6 +35,7 @@ class DATABASE:
 
     def create(self, database_type, instance):
         instance_variables = instance.__dict__
+        print(f"db.py: {instance_variables} ")
         self.save_table(database_type=database_type, values=instance_variables)
 
 
@@ -62,7 +64,6 @@ class DATABASE:
                     raise ValueError(f"Missing field: {column_name}")
 
             self.database_cursor.execute(sql, values) # request an sql query
-
 
     def create_table(self, database_type):
         with self.database_connection:
@@ -101,10 +102,11 @@ class DATABASE:
                         ID,
                         NAME,
                         EMAIL,
-                        BALANCE
+                        BALANCE,
+                        HASHED_PASSWORD
                     FROM USERS
                     WHERE {searchingParamter} = ?
-                    ;""", (searchingValue, ))
+                    ;""", (searchingValue,))
                 user = self.database_cursor.fetchone()
                 return user
         except:

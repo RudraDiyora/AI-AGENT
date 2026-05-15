@@ -2,7 +2,6 @@ const API = "http://127.0.0.1:8000";
 
 async function validateResponse(response, message) {
   const data = await response.json();
-
   if (!response.ok) {
     // backend sent error message
     throw new Error(data.detail || message);
@@ -29,15 +28,36 @@ async function validateResponse(response, message) {
 // by arrow function logic: res => res.json = function ___() {return res.json()}
 //      res.json() converts the HTTP response into a JavaScript object
 
+// Token -> User
+export const get_session_user = async(access_token) => {
+
+  if (!access_token) {
+    throw new Error("No session token found");
+  }
+  const res = await fetch(`${API}/me`,
+  {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${access_token}`
+    }
+  });
+
+  return validateResponse(res, "session retrieval failed")
+}
+
 // Login
-export const login = async(email) => {
+export const login = async(email, password) => {
+  console.log(password);
   const res = await fetch(`${API}/login`,
   {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+       },
       body: JSON.stringify(
         {
-          "email": email
+          "email": email,
+          "password": password
         }
       )
   });
@@ -46,26 +66,40 @@ export const login = async(email) => {
 }
 
 // User Views
-export const getBalance = async(userID) => {
-  const res = await fetch(`${API}/balance/${userID}`);
+export const getBalance = async() => {
+  const res = await fetch(`${API}/balance`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${localStorage.getItem("token")}`
+    }  
+});
   return validateResponse(res, "Balance retrieval failed");
 }
 
-export const getTransactionHistory = async(userID) => {
-  const res = await fetch(`${API}/transaction-history/${userID}`);
+export const getTransactionHistory = async() => {
+  const res = await fetch(`${API}/transaction-history`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${localStorage.getItem("token")}`
+    }
+  });
   return validateResponse(res, "Transaction history retrieval failed");
 }
 
 // User Handeling
-export const createUser = async(userName, email) => {
+export const createUser = async(userName, email, password) => {
     const res = await fetch(`${API}/create-user`, 
     { // because POST/deposit/ takes a "deposite" object, we have to convert the data
         method: "POST", // clarifies a post request
-        headers: { "Content-Type": "application/json" }, // Tells the api that the data is JSON
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}` 
+        }, // Tells the api that the data is JSON
         body: JSON.stringify(
           { 
             "name": userName, 
-            "email": email
+            "email": email,
+            "password": password,
           }
         ) // converst JS object to JSON string(opposite of res.json())
     });
@@ -73,14 +107,16 @@ export const createUser = async(userName, email) => {
     return validateResponse(res, "User creation failed");
 }
 
-export const deposit = async (userID, amount) => {
+export const deposit = async (amount) => {
     const res = await fetch(`${API}/deposit`, 
     { // because POST/deposit/ takes a "deposite" object, we have to convert the data
         method: "POST", // clarifies a post request
-        headers: { "Content-Type": "application/json" }, // Tells the api that the data is JSON
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+         }, // Tells the api that the data is JSON
         body: JSON.stringify(
           { 
-            "user_id": userID, 
             "amount": amount
           }
         ) // converst JS object to JSON string(opposite of res.json())
@@ -88,14 +124,16 @@ export const deposit = async (userID, amount) => {
   return validateResponse(res, "Deposit failed");
 }
 
-export const withdraw = async (userID, amount) => {
+export const withdraw = async (amount) => {
     const res = await fetch(`${API}/withdraw`, 
     {
         method: "POST", // clarifies a post request
-        headers: { "Content-Type": "application/json" }, // Tells the api that the data is JSON
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }, // Tells the api that the data is JSON
         body: JSON.stringify(
           { 
-            "user_id": userID, 
             "amount": amount
           }
         ) // converst JS object to JSON string(opposite of res.json())
@@ -104,14 +142,16 @@ export const withdraw = async (userID, amount) => {
   return validateResponse(res, "Withdraw failed");
 }
 
-export const transfer = async (senderID, receiverID, amount) => {
+export const transfer = async (receiverID, amount) => {
   const res = await fetch(`${API}/transfer`,
   {
     method: "POST",
-    headers: { "Content-Type": "application/json" }, // Tells the api that the data is JSON
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${localStorage.getItem("token")}`
+    }, // Tells the api that the data is JSON
     body: JSON.stringify(
       {
-        "sender_id": senderID, 
         "receiver_id": receiverID, 
         "transaction_amount": amount
       }

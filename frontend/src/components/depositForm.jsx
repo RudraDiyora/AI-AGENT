@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { deposit } from "../api/api";
 
-export default function DepositForm({ userID }) {
+export default function DepositForm({}) {
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export default function DepositForm({ userID }) {
         setLoading(true);
         setStatus("Processing...");
 
-        await deposit(userID, numericAmount);
+        await deposit(numericAmount);
 
         setStatus("Deposit successful");
         setAmount("");

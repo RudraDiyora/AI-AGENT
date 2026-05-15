@@ -16,36 +16,32 @@ import CreateUserForm from './components/createUserForm'
 import LoginForm from './components/loginForm'
 import TransactionHistoryView from './components/transactionHistoryView'
 
+import { get_session_user } from './api/api'
+
 function App() {
   // Stores the currently logged in user
   // handles within page updates
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState("");
 
-  // useEffect runs AFTER the component renders -> handles page-to-page refreshes
-  useEffect(() => { // triggered upon app reload
+  useEffect(() => {
+    const loadUser = async() => {
+      const savedToken = localStorage.getItem("token");
+      console.log(savedToken);
+      if (savedToken) {
+        const user_ = await get_session_user(savedToken);
+        setUser(user_);
+        setToken(savedToken)
+      }
+    };
 
-    // localStorage is persistent browser storage.
-    // getItem("userID") checks if a userID was saved previously.
-    // Returns:
-    //   - the saved string if it exists
-    //   - null if nothing is saved
-    const savedUser = localStorage.getItem("user");
-
-    
-    // If a saved user exists
-    if (savedUser) {
-      // Restore the user into React state
-      // Updating state causes React to rerender the UI
-      setUser(JSON.parse(savedUser));
-    }
-  //[]	once after first render
-  //[user]	whenever user changes
-  //no array	every render
+    loadUser();
   }, []);
 
   const handleLogOut = () => {
     setUser(null)
-    localStorage.removeItem("user");
+    setToken("");
+    localStorage.removeItem("token");
   };
   
   return (
@@ -55,7 +51,7 @@ function App() {
       (
         <div>
           <h1>Login Form</h1>
-          <LoginForm setUser={setUser}/>
+          <LoginForm setToken = {setToken} setUser={setUser}/>
 
           <h1>Create User Form</h1>
           <CreateUserForm/>
@@ -70,22 +66,22 @@ function App() {
           </div>
           <div>
             <h1>Deposit Form</h1>
-            <DepositForm userID={user.user_id}/>
+            <DepositForm/>
           </div>
 
           <div>
             <h1>Withdraw Form</h1>
-            <WithdrawForm userID={user.user_id}/>
+            <WithdrawForm/>
           </div>
 
           <div>
             <h1>Transfer Form</h1>
-            <TransferForm userID={user.user_id}/>
+            <TransferForm/>
           </div>
 
           <div>
             <h1>Transaction History</h1>
-            <TransactionHistoryView userID={user.user_id}/>
+            <TransactionHistoryView/>
           </div>
         </>
       )}

@@ -5,6 +5,7 @@ export default function CreateUserForm() {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isError, setIsError] = useState(false);
 
@@ -13,13 +14,14 @@ export default function CreateUserForm() {
         setLoading(true);
         setStatus("Processing...");
 
-        await createUser(userName, email);
+        await createUser(userName, email, password);
 
         setStatus("User successfully created");
 
         // Reset all the input fields
         setUserName("");
         setEmail("");
+        setPassword("");
         setIsError(false);
     } 
     catch (err) {
@@ -47,6 +49,13 @@ export default function CreateUserForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
       />
+      <input
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+      />
+
 
       <button onClick={handleUserCreate} disabled={loading}>
             {loading ? "Processing..." : "Create"}

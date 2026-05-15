@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { transfer } from "../api/api";
 
-export default function TransferForm({ userID }) {
+export default function TransferForm({ }) {
   const [amount, setAmount] = useState("");
   const [receiverID, setReceiverID] = useState("")
   const [status, setStatus] = useState(null);
@@ -28,7 +28,7 @@ export default function TransferForm({ userID }) {
         setLoading(true);
         setStatus("Processing...");
 
-        await transfer(userID, receiverID, numericAmount);
+        await transfer(receiverID, numericAmount);
 
         // Reset all the fields
         setStatus("Transfer successful");

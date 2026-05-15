@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { withdraw } from "../api/api";
 
-export default function WithdrawForm({ userID }) {
+export default function WithdrawForm({}) {
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function WithdrawForm({ userID }) {
         setLoading(true);
         setStatus("Processing...");
 
-        await withdraw(userID, numericAmount);
+        await withdraw(numericAmount);
 
         setStatus("Withdraw successful");
         setAmount("");
