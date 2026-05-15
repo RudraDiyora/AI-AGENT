@@ -14,6 +14,7 @@ import WithdrawForm from './components/withdrawForm'
 import TransferForm from './components/transferForm'
 import CreateUserForm from './components/createUserForm'
 import LoginForm from './components/loginForm'
+import TransactionHistoryView from './components/transactionHistoryView'
 
 function App() {
   // Stores the currently logged in user
@@ -80,6 +81,11 @@ function App() {
           <div>
             <h1>Transfer Form</h1>
             <TransferForm userID={user.user_id}/>
+          </div>
+
+          <div>
+            <h1>Transaction History</h1>
+            <TransactionHistoryView userID={user.user_id}/>
           </div>
         </>
       )}

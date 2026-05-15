@@ -29,7 +29,7 @@ async function validateResponse(response, message) {
 // by arrow function logic: res => res.json = function ___() {return res.json()}
 //      res.json() converts the HTTP response into a JavaScript object
 
-//login
+// Login
 export const login = async(email) => {
   const res = await fetch(`${API}/login`,
   {
@@ -45,11 +45,18 @@ export const login = async(email) => {
   return validateResponse(res, "login failed")
 }
 
-export const getBalance = (userID) => {
-  fetch(`${API}/balance/${userID}`).then(res => res.json());
+// User Views
+export const getBalance = async(userID) => {
+  const res = await fetch(`${API}/balance/${userID}`);
   return validateResponse(res, "Balance retrieval failed");
 }
 
+export const getTransactionHistory = async(userID) => {
+  const res = await fetch(`${API}/transaction-history/${userID}`);
+  return validateResponse(res, "Transaction history retrieval failed");
+}
+
+// User Handeling
 export const createUser = async(userName, email) => {
     const res = await fetch(`${API}/create-user`, 
     { // because POST/deposit/ takes a "deposite" object, we have to convert the data
@@ -113,3 +120,4 @@ export const transfer = async (senderID, receiverID, amount) => {
 
   return validateResponse(res, "Transfer failed");
 }
+

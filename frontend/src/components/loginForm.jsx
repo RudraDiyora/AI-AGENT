@@ -28,7 +28,7 @@ export default function LoginForm({ setUser }) {
         setIsError(false);
     } 
     catch (err) {
-        alert(err);
+        console.log(err);
         setStatus("Login failed");
         setIsError(true);
     } 

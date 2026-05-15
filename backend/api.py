@@ -44,7 +44,7 @@ class LoginRequest(BaseModel):
 
 # debugging
 @app.get("/db_users")
-def get_transaction_history():
+def get_users():
     try:
         masterDB.database_cursor.execute("SELECT * FROM USERS;")
         return masterDB.database_cursor.fetchall()
@@ -54,7 +54,7 @@ def get_transaction_history():
             detail=str(e)
         )
 @app.get("/db_transactions")
-def get_transaction_history():
+def get_transaction_history_all():
     try:
         masterDB.database_cursor.execute("SELECT * FROM TRANSACTIONS;")
         return masterDB.database_cursor.fetchall()
