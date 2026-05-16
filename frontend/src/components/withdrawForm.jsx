@@ -39,22 +39,28 @@ export default function WithdrawForm({}) {
 
   return (
     <div>
-      <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Amount"
-      />
-
-      <button onClick={handleWithdraw} disabled={loading}>
-            {loading ? "Processing..." : "Withdraw"}
-      </button>
-
+      <div className="form-group">
+        <label className="form-label">Amount (USD)</label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="0.00"
+          onKeyDown={(e) => e.key === "Enter" && handleWithdraw()}
+        />
+      </div>
+ 
+      <div className="form-actions">
+        <button onClick={handleWithdraw} disabled={loading} style={{ width: "100%" }}>
+          {loading ? <><span className="spinner" /> &nbsp;Processing…</> : "Withdraw Funds"}
+        </button>
+      </div>
+ 
       {status && (
-        <p style={{ color: isError ? "red" : "green" }}>
-            {status}
+        <p className={`status ${isError ? "error" : "success"}`}>
+          {isError ? "✗" : "✓"} {status}
         </p>
       )}
     </div>

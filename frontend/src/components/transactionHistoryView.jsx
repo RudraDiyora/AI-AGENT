@@ -6,6 +6,7 @@ export default function TransactionHistoryView ({}) {
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [fetched, setFetched] = useState(false);
 
     const handleTransactionHistoryRetrieval = async() => {
         try {
@@ -17,41 +18,78 @@ export default function TransactionHistoryView ({}) {
             setTransactionHistory(transactionHistory_);
             
             setStatus("Transaction History retrieval successful");
+            setFetched(true);
             setIsError(false);
         } catch(err) {
             console.log(err);
             setStatus("Transaction History retrieval FAILED")
+            setFetched(false);
             setIsError(true);
         } finally {
             setLoading(false);
         }
     };
 
+    const getBadgeClass = (type) => {
+        if (!type) return "";
+        const t = type.toLowerCase();
+        if (t.includes("deposit")) return "deposit";
+        else if (t.includes("withdraw")) return "withdraw";
+        else if (t.includes("transfer")) return "transfer";
+        return "";
+    };
+
 
     return (
-        <div>
-            <button onClick={handleTransactionHistoryRetrieval} disabled={loading}>
-                 {loading ? "Processing..." : "Get Transaction History"}
+    <div>
+        <div style={{ padding: "28px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={handleTransactionHistoryRetrieval} disabled={loading} className="ghost" style={{ padding: "10px 20px" }}>
+            {loading ? <><span className="spinner" style={{ borderTopColor: "var(--gold)", borderColor: "var(--border)" }} /> &nbsp;Loading…</> : fetched ? "Refresh" : "Load History"}
             </button>
+    
             {status && (
-                <p style={{ color: isError ? "red" : "green" }}>
-                    {status}
-                </p>
-            )} 
-
-            {
-                (status == "Transaction History retrieval successful") ?
-                transactionHistory.map(transaction => (
-                    <div key={transaction.id}>
-                        <div> From: {transaction.sender_id} </div>
-                        <div> To: {transaction.receiver_id} </div>
-                        <div> Amount: {transaction.amount} </div>
-                        <div> Type: {transaction.type} </div>
-                    </div>
-                ))
-                : ""
-            }
-
+            <p className={`status ${isError ? "error" : "success"}`} style={{ margin: 0 }}>
+                {isError ? "✗" : "✓"} {status}
+            </p>
+            )}
         </div>
+    
+        {fetched && (
+            transactionHistory.length === 0 ? (
+            <p className="tx-empty">No transactions found.</p>
+            ) : (
+            <div style={{ overflowX: "auto" }}>
+                <table className="tx-table">
+                <thead>
+                    <tr>
+                    <th>ID</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {transactionHistory.map((tx, i) => (
+                    <tr key={tx.id ?? i} style={{ animationDelay: `${i * 40}ms` }}>
+                        <td className="tx-id">#{tx.id}</td>
+                        <td>{tx.sender_id ?? "—"}</td>
+                        <td>{tx.receiver_id ?? "—"}</td>
+                        <td className="tx-amount">
+                        ${parseFloat(tx.amount).toFixed(2)}
+                        </td>
+                        <td>
+                        <span className={`tx-type-badge ${getBadgeClass(tx.type)}`}>
+                            {tx.type}
+                        </span>
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+            )
+        )}
+    </div>
     );
 }

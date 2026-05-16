@@ -10,6 +10,40 @@ async function validateResponse(response, message) {
   return data;
 };
 
+// Token -> User
+export const get_session_user = async(access_token) => {
+
+  if (!access_token) {
+    throw new Error("No session token found");
+  }
+  const res = await fetch(`${API}/me`,
+  {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${access_token}`
+    }
+  });
+
+  return validateResponse(res, "session retrieval failed")
+}
+
+// token->user->update user
+export async function loadSessionUser({setUser, setToken}) {
+  const savedToken = localStorage.getItem("token");
+  if (savedToken) {   
+    try {
+      const user_ = await get_session_user(savedToken);
+      console.log(user_);
+      setUser(user_);
+      setToken(savedToken);
+    } catch {
+      console.log("sum error");
+      localStorage.removeItem("token");
+    }
+  }
+};
+
+
 // JSON.stringify(): JS → JSON (to backend)
 // res.json(): JSON → JS (from backend)
 
@@ -28,26 +62,9 @@ async function validateResponse(response, message) {
 // by arrow function logic: res => res.json = function ___() {return res.json()}
 //      res.json() converts the HTTP response into a JavaScript object
 
-// Token -> User
-export const get_session_user = async(access_token) => {
-
-  if (!access_token) {
-    throw new Error("No session token found");
-  }
-  const res = await fetch(`${API}/me`,
-  {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${access_token}`
-    }
-  });
-
-  return validateResponse(res, "session retrieval failed")
-}
 
 // Login
 export const login = async(email, password) => {
-  console.log(password);
   const res = await fetch(`${API}/login`,
   {
       method: "POST",

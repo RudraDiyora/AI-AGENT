@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { login } from "../api/api";
 
-export default function LoginForm({ setToken, setUser }) {
+export default function LoginForm({ setToken, loadUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState(null);
@@ -24,12 +24,8 @@ export default function LoginForm({ setToken, setUser }) {
 
         localStorage.setItem("token", data.access_token);
         setToken(data.access_token);
-
-        setUser({
-          user_id: data.user_id,
-          email: data.email,
-          name: data.name
-        });
+        loadUser();
+        console.log("TOKENNNN", data.access_token);
 
         setStatus("Login successful");
         setIsError(false);
@@ -48,27 +44,37 @@ export default function LoginForm({ setToken, setUser }) {
 
   return (
     <div>
-      <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-      />
-      <input
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-      />
-
-      <button onClick={handleLogin} disabled={loading}>
-            {loading ? "Processing..." : "Login"}
-      </button>
-
-
+      <div className="form-group">
+        <label className="form-label">Email Address</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+        />
+      </div>
+ 
+      <div className="form-group">
+        <label className="form-label">Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+        />
+      </div>
+ 
+      <div className="form-actions">
+        <button onClick={handleLogin} disabled={loading} style={{ width: "100%" }}>
+          {loading ? <><span className="spinner" /> &nbsp;Authenticating…</> : "Sign In"}
+        </button>
+      </div>
+ 
       {status && (
-        <p style={{ color: isError ? "red" : "green" }}>
-            {status}
+        <p className={`status ${isError ? "error" : "success"}`}>
+          {isError ? "✗" : "✓"} {status}
         </p>
       )}
     </div>

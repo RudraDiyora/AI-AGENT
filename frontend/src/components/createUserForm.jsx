@@ -37,34 +37,45 @@ export default function CreateUserForm() {
 
   return (
     <div>
-      <input
-            type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Name"
-      />
-      <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-      />
-      <input
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-      />
-
-
-      <button onClick={handleUserCreate} disabled={loading}>
-            {loading ? "Processing..." : "Create"}
-      </button>
-
-
+      <div className="form-group">
+        <label className="form-label">Full Name</label>
+        <input
+          type="text"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+          placeholder="Your full name"
+        />
+      </div>
+ 
+      <div className="form-group">
+        <label className="form-label">Email Address</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+        />
+      </div>
+ 
+      <div className="form-group">
+        <label className="form-label">Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+        />
+      </div>
+ 
+      <div className="form-actions">
+        <button onClick={handleUserCreate} disabled={loading} style={{ width: "100%" }}>
+          {loading ? <><span className="spinner" /> &nbsp;Creating Account…</> : "Open Account"}
+        </button>
+      </div>
+ 
       {status && (
-        <p style={{ color: isError ? "red" : "green" }}>
-            {status}
+        <p className={`status ${isError ? "error" : "success"}`}>
+          {isError ? "✗" : "✓"} {status}
         </p>
       )}
     </div>
